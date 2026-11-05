@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {withBase} from '../lib/url';
+---
+<BaseLayout title="页面不存在">
+  <div class="container static-page error-page"><div class="eyebrow">404 NOT FOUND</div><h1>没有找到这个页面</h1><p class="lead">链接可能已经变更，或者应用已从目录中移除。</p><a class="button-primary" href={withBase('/apps/')}>返回应用目录 →</a></div>
+</BaseLayout>

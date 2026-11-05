@@ -1,0 +1,29 @@
+---
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import '../styles/global.css';
+import {brand} from '../config/brand';
+interface Props {title?: string; description?: string;}
+const {title=brand.name,description=brand.description}=Astro.props;
+const canonical=new URL(Astro.url.pathname, Astro.site || 'https://example.com').toString();
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#f7f9fc"/>
+    <meta name="description" content={description}/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content={brand.name}/>
+    <meta property="og:title" content={title}/>
+    <meta property="og:description" content={description}/>
+    <link rel="canonical" href={canonical}/>
+    <title>{title === brand.name ? title : title + ' · ' + brand.name}</title>
+  </head>
+  <body>
+    <SiteHeader/>
+    <main><slot/></main>
+    <SiteFooter/>
+  </body>
+</html>

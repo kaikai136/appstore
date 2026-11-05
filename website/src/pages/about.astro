@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {withBase} from '../lib/url';
+---
+<BaseLayout title="关于 Cockpit Apps">
+  <div class="container static-page">
+    <div class="eyebrow">ABOUT THIS PROJECT</div><h1>关于 Cockpit App Store</h1>
+    <p class="lead">Cockpit Apps 是独立维护的开源应用展示目录，帮助你快速发现服务、比较版本和查看部署所需的技术条件。</p>
+    <div class="static-card"><h2>我们在做什么</h2><p>整理应用的名称、分类、简介、图标、支持架构和版本信息，生成可快速访问的静态网站。应用目录由 Git 驱动，构建流水线负责在数据变更后刷新页面。</p></div>
+    <div class="static-card"><h2>我们暂时不做什么</h2><p>本站不需要账号，也不连接服务器；不提供远程操作、容器部署、安装脚本执行或 Cockpit 插件管理功能。原始软件包中的部署模板仅用于了解配置要求。</p></div>
+    <div class="static-card"><h2>资料来源与版权</h2><p>所展示的软件归各项目原作者所有，名称和图标归相应权利人所有。来源、许可证和用途说明可在 <a href={withBase('/legal/')}>来源与许可</a> 页面查看。</p></div>
+    <p><a class="button-primary" href={withBase('/apps/')}>开始探索应用 →</a></p>
+  </div>
+</BaseLayout>

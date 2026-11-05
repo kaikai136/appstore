@@ -1,0 +1,17 @@
+---
+import { withBase } from '../lib/url';
+---
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="brand footer-brand"><span class="brand-mark mini" aria-hidden="true"><span></span><span></span><span></span><span></span></span><span>Cockpit Apps</span></div>
+      <p>为热爱开源与自托管的人，整理值得探索的应用。</p>
+      <small>独立的应用展示目录，并非 Cockpit 官方网站或安装插件。</small>
+    </div>
+    <nav aria-label="页脚导航">
+      <a href={withBase('/apps/')}>应用目录</a>
+      <a href={withBase('/about/')}>关于项目</a>
+      <a href={withBase('/legal/')}>来源与许可</a>
+    </nav>
+  </div>
+</footer>

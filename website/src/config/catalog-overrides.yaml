@@ -1,0 +1,16 @@
+# 网站展示层修正，不修改上游原始文件。
+exclude:
+  - ai-gateway
+  - ai-portal
+# 推荐首页应用，均必须是真实存在于源目录的 key。
+featured:
+  - ollama
+  - postgresql
+  - n8n
+  - redis
+  - grafana
+  - jellyfin
+  - vllm
+  - uptime-kuma
+# 不可靠的多平台版本不要通过字符串排序自行判断“最新”。
+preferredVersions: {}

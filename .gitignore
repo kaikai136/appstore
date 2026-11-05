@@ -1,0 +1,18 @@
+# OSX
+.DS_Store
+
+# IntelliJ
+.idea
+
+# VSCode
+.vscode
+
+# Temporary source package from the isolated worktree, not project source
+/website.tar.gz
+
+
+# Local environment and secret material
+**/.env
+**/.env.*
+**/.aes_key
+**/masterkey.env

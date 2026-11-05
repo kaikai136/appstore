@@ -1,0 +1,20 @@
+export type CatalogApp = {
+  key: string;
+  name: string;
+  summary: string;
+  summaryEn?: string;
+  categories: string[];
+  icon: string;
+  type: string;
+  architectures: string[];
+  gpuSupport: boolean;
+  memoryRequiredMiB: number | null;
+  versions: string[];
+  featured: boolean;
+  recommendWeight: number;
+  website?: string;
+  repository?: string;
+  documentation?: string;
+  displayStatus: string;
+};
+export type CatalogCategory = {key:string;label:string;sort:number};

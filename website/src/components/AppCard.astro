@@ -1,0 +1,25 @@
+---
+import type { CatalogApp, CatalogCategory } from '../lib/types';
+import { withBase } from '../lib/url';
+interface Props { app: CatalogApp; categories: CatalogCategory[]; }
+const {app,categories} = Astro.props;
+const nameOf=(key: string) => categories.find(c=>c.key===key)?.label || key;
+---
+<a href={withBase('/apps/'+app.key+'/')} class="app-card"
+   data-app-card data-key={app.key} data-name={(app.name+' '+app.summary+' '+app.key).toLowerCase()}
+   data-categories={app.categories.join('|')} data-arches={app.architectures.join('|')} data-gpu={app.gpuSupport ? 'yes':'no'} data-featured={app.featured ? 'yes':'no'} data-weight={app.recommendWeight}>
+  <div class="card-top">
+    <div class="app-icon">
+      {app.icon ? <img src={withBase(app.icon)} width="54" height="54" alt="" loading="lazy"/> : <span class="icon-fallback">{app.name.slice(0,1).toUpperCase()}</span>}
+    </div>
+    <span class="card-chevron" aria-hidden="true">↗</span>
+  </div>
+  <div class="card-main">
+    <h3>{app.name}</h3>
+    <p>{app.summary}</p>
+  </div>
+  <div class="card-bottom">
+    <span class="card-category">{app.categories.length ? nameOf(app.categories[0]):'其他'}</span>
+    <span class="card-meta">{app.versions.length>1 ? app.versions.length+' 个版本' : (app.versions[0] || '查看详情')}</span>
+  </div>
+</a>

@@ -1,0 +1,77 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppCard from '../../components/AppCard.astro';
+import {withBase} from '../../lib/url';
+import catalog from '../../data/catalog.json';
+import type {CatalogApp,CatalogCategory} from '../../lib/types';
+export function getStaticPaths() {
+  return (catalog.apps as CatalogApp[]).map(app=>({params:{key:app.key},props:{app}}));
+}
+interface Props {app: CatalogApp;}
+const {app}=Astro.props;
+const details=JSON.parse(fs.readFileSync(path.join(process.cwd(),'src/data/details',app.key+'.json'),'utf8')) as {
+  readmeZh:string;
+  readmeEn:string;
+  versionsDetailed: Array<{id:string;fields:Array<{key:string;label:string;type:string;required:boolean;sensitive:boolean}>;templateAvailable:boolean;needsSourcePlatform:boolean;gpuTemplate:boolean;}>;
+};
+const cats=catalog.categories as CatalogCategory[];
+const categoryName=(key:string)=>cats.find(c=>c.key===key)?.label||key;
+const related=(catalog.apps as CatalogApp[]).filter(other=>other.key!==app.key && other.categories.some(cat=>app.categories.includes(cat))).slice(0,4);
+---
+<BaseLayout title={app.name} description={app.summary}>
+  <div class="container detail-page">
+    <nav class="breadcrumb" aria-label="页面位置"><a href={withBase('/')}>首页</a><span>/</span><a href={withBase('/apps/')}>全部应用</a><span>/</span><strong>{app.name}</strong></nav>
+    <div class="detail-hero">
+      <div class="detail-intro">
+        <div class="detail-logo">{app.icon ? <img src={withBase(app.icon)} width="86" height="86" alt=""/>:<span>{app.name.slice(0,1)}</span>}</div>
+        <div class="detail-heading">
+          <div class="tag-row">{app.categories.map(k=><a class="tag" href={withBase('/apps/?category='+k)}>{categoryName(k)}</a>)}{app.gpuSupport&&<span class="tag tag-accent">GPU</span>}</div>
+          <h1>{app.name}</h1><p>{app.summary}</p>
+          <div class="detail-actions">{app.website && <a class="button-primary" href={app.website} target="_blank" rel="noopener noreferrer">访问官网 ↗</a>}{app.repository && <a class="button-outline" href={app.repository} target="_blank" rel="noopener noreferrer">源代码 ↗</a>}{app.documentation && <a class="text-link" href={app.documentation} target="_blank" rel="noopener noreferrer">文档 ↗</a>}</div>
+        </div>
+      </div>
+      <div class="detail-status"><span class="status-dot"></span> 应用资料已收录 <small>仅供查阅，暂不支持 Cockpit 直接安装</small></div>
+    </div>
+    <div class="detail-columns">
+      <div class="detail-body">
+        <section class="detail-panel">
+          <div class="detail-panel-head"><h2>应用介绍</h2><span>OVERVIEW</span></div>
+          <div class="readme-content markdown-body" set:html={details.readmeZh || '<p>暂未提供详细介绍。</p>'}/>
+        </section>
+        <section class="detail-panel">
+          <div class="detail-panel-head"><h2>版本与部署参数</h2><span>VERSIONS</span></div>
+          <p class="muted" style="margin-top:0">以下信息来自开源应用包模板，仅用于技术参考；尚未转换成可直接使用的 Cockpit 安装配置。</p>
+          {details.versionsDetailed.length > 0 ? <>
+            <label class="version-select-label" for="version-select">查看应用包版本</label>
+            <select id="version-select" class="version-select">{details.versionsDetailed.map(v=><option value={v.id}>{v.id}</option>)}</select>
+            {details.versionsDetailed.map((v,i)=><div class="version-panel" data-version={v.id} hidden={i!==0}>
+              <div class="version-summary"><span>版本 <strong>{v.id}</strong></span>{v.gpuTemplate && <span class="tag">GPU 相关模板</span>}<span class="tag">{v.templateAvailable?'包含 Compose 模板':'未检测到 Compose'}</span></div>
+              <h3>配置字段</h3>
+              {v.fields.length > 0 ? <div class="fields-table"><div class="fields-row fields-header"><span>参数</span><span>说明</span><span>属性</span></div>{v.fields.map(field=><div class="fields-row"><code>{field.key}</code><span>{field.label||field.key}</span><span>{field.sensitive?'敏感信息':(field.required?'必填':'可选')}</span></div>)}</div> : <p class="muted">此版本未声明可配置的表单字段。</p>}
+              {v.needsSourcePlatform && <p class="compat-warning">原始模板存在特定平台的网络或环境变量依赖，不能直接作为 Cockpit 安装文件使用。</p>}
+            </div>)}
+          </> : <p class="muted">暂未发现可展示的应用版本目录。</p>}
+        </section>
+      </div>
+      <aside class="detail-aside">
+        <div class="info-panel"><h3>技术信息</h3>
+          <div class="info-line"><span>应用类型</span><strong>{app.type||'开源应用'}</strong></div>
+          <div class="info-line"><span>版本数量</span><strong>{app.versions.length} 个</strong></div>
+          <div class="info-line"><span>GPU 支持</span><strong>{app.gpuSupport?'提供相关版本/配置':'未声明'}</strong></div>
+          <div class="info-line"><span>内存要求</span><strong>{app.memoryRequiredMiB ? app.memoryRequiredMiB+' MiB':'未提供'}</strong></div>
+          <div class="info-line arches"><span>支持架构</span><div>{app.architectures.length ? app.architectures.map(arch=><span class="arch-chip">{arch}</span>):<span class="muted">未提供</span>}</div></div>
+        </div>
+        <div class="aside-note"><strong>关于部署</strong><p>这是一个只读展示目录。现有应用包的 Compose、安装脚本与环境变量可能依赖原始平台，需要单独进行 Cockpit 适配与验证。</p></div>
+      </aside>
+    </div>
+    {related.length > 0 && <section class="section related-section"><div class="section-heading"><div><div class="eyebrow">DISCOVER MORE</div><h2>你可能还会喜欢</h2></div><a class="section-link" href={withBase('/apps/')}>全部应用 ↗</a></div><div class="app-grid">{related.map(candidate=><AppCard app={candidate} categories={cats}/>)}</div></section>}
+  </div>
+</BaseLayout>
+<script>
+  const selector=document.querySelector<HTMLSelectElement>('#version-select');
+  selector?.addEventListener('change',()=>{
+    document.querySelectorAll<HTMLElement>('[data-version]').forEach(el=>{el.hidden=el.dataset.version!==selector.value;});
+  });
+</script>

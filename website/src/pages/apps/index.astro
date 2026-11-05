@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AppCard from '../../components/AppCard.astro';
+import catalog from '../../data/catalog.json';
+import type { CatalogApp,CatalogCategory } from '../../lib/types';
+const apps=(catalog.apps as CatalogApp[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+const categories=catalog.categories as CatalogCategory[];
+const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
+---
+<BaseLayout title="全部应用" description="按分类、GPU 支持和架构浏览 Cockpit App Store 的开源应用目录。">
+  <section class="list-intro">
+    <div class="container"><div class="eyebrow">APPLICATION DIRECTORY</div><h1>探索全部应用</h1><p>从 {catalog.manifest.total} 款应用中，找到适合你的下一款开源工具。</p></div>
+  </section>
+  <div class="container catalog-layout">
+    <aside class="filter-sidebar" aria-label="应用分类">
+      <div class="filter-sidebar-head">应用分类 <span>{categories.length}</span></div>
+      <button type="button" class="filter-category active" data-filter-category="all"><span>全部应用</span><span>{apps.length}</span></button>
+      {categories.map(cat=><button type="button" class="filter-category" data-filter-category={cat.key}><span>{cat.label}</span><span>{count(cat.key)}</span></button>)}
+    </aside>
+    <div class="catalog-content">
+      <div class="catalog-toolbar" role="search">
+        <label class="toolbar-search"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="catalog-search" type="search" placeholder="搜索应用名称或简介..." autocomplete="off" aria-label="搜索全部应用"/></label>
+        <label class="select-wrap"><span>架构</span><select id="filter-architecture" aria-label="架构筛选"><option value="all">全部</option><option value="amd64">amd64</option><option value="arm64">arm64</option><option value="arm/v7">arm/v7</option></select></label>
+        <label class="select-wrap"><span>GPU</span><select id="filter-gpu" aria-label="GPU 支持筛选"><option value="all">不限</option><option value="yes">支持</option></select></label>
+        <label class="select-wrap"><span>排序</span><select id="sort-apps" aria-label="排序方式"><option value="name">名称</option><option value="featured">推荐</option></select></label>
+      </div>
+      <div class="result-head"><p role="status" aria-live="polite"><strong id="result-count">{apps.length}</strong> 款应用</p><button id="reset-filters" type="button">清空筛选</button></div>
+      <div class="app-grid catalog-grid" id="catalog-grid">
+        {apps.map(app=><AppCard app={app} categories={categories}/>)}
+      </div>
+      <div class="empty-results" id="empty-results" hidden><strong>没有找到符合条件的应用</strong><p>试试调整关键词或者清空筛选条件。</p></div>
+    </div>
+  </div>
+</BaseLayout>
+<script>
+  const form = {
+    input: document.querySelector<HTMLInputElement>('#catalog-search')!,
+    arch: document.querySelector<HTMLSelectElement>('#filter-architecture')!,
+    gpu: document.querySelector<HTMLSelectElement>('#filter-gpu')!,
+    sort: document.querySelector<HTMLSelectElement>('#sort-apps')!,
+    grid: document.querySelector<HTMLElement>('#catalog-grid')!,
+    count: document.querySelector<HTMLElement>('#result-count')!,
+    empty: document.querySelector<HTMLElement>('#empty-results')!,
+  };
+  const cards = Array.from(form.grid.querySelectorAll<HTMLElement>('[data-app-card]'));
+  const categories = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter-category]'));
+  let activeCategory='all';
+  const params=new URLSearchParams(window.location.search);
+  form.input.value=params.get('q')||'';
+  activeCategory=categories.some(btn=>btn.dataset.filterCategory===params.get('category')) ? params.get('category')! : 'all';
+
+  function update() {
+    const q=form.input.value.trim().toLocaleLowerCase();
+    const arch=form.arch.value;
+    const gpu=form.gpu.value;
+    let shown=0;
+    for(const card of cards) {
+      const matches=(!q || (card.dataset.name||'').includes(q)) &&
+        (activeCategory==='all'||(card.dataset.categories||'').split('|').includes(activeCategory)) &&
+        (arch==='all'||(card.dataset.arches||'').split('|').includes(arch)) &&
+        (gpu==='all'||card.dataset.gpu===gpu);
+      card.hidden=!matches;
+      if(matches) shown++;
+    }
+    if(form.sort.value==='featured') {
+      const score=(el:HTMLElement)=>Number(el.dataset.featured==='yes')*10000+Number(el.dataset.weight||0);
+      cards.slice().sort((a,b)=>score(b)-score(a)||(a.dataset.key||'').localeCompare(b.dataset.key||'')).forEach(el=>form.grid.appendChild(el));
+    } else cards.slice().sort((a,b)=>(a.dataset.key||'').localeCompare(b.dataset.key||'')).forEach(el=>form.grid.appendChild(el));
+    form.count.textContent=String(shown);
+    form.empty.hidden=shown>0;
+    categories.forEach(btn=>{
+      const active=btn.dataset.filterCategory===activeCategory;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-pressed',String(active));
+    });
+    const url=new URL(window.location.href);
+    if(q)url.searchParams.set('q',form.input.value.trim());else url.searchParams.delete('q');
+    if(activeCategory!=='all')url.searchParams.set('category',activeCategory);else url.searchParams.delete('category');
+    history.replaceState(null,'',url.pathname+url.search);
+  }
+  categories.forEach(b=>b.addEventListener('click',()=>{activeCategory=b.dataset.filterCategory||'all';update()}));
+  [form.input,form.arch,form.gpu,form.sort].forEach(el=>el.addEventListener('input',update));
+  document.querySelector('#reset-filters')?.addEventListener('click',()=>{
+    activeCategory='all';form.input.value='';form.arch.value='all';form.gpu.value='all';form.sort.value='name';update();
+  });
+  update();
+</script>

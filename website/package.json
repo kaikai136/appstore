@@ -1,0 +1,29 @@
+{
+  "name": "cockpit-appstore-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run data:generate && astro dev --host 0.0.0.0",
+    "data:generate": "node scripts/generate-catalog.mjs",
+    "data:validate": "node scripts/validate-catalog.mjs",
+    "brand:audit": "node scripts/audit-brand.mjs",
+    "build": "npm run data:generate && npm run data:validate && npm run brand:audit && astro build && node scripts/verify-output.mjs",
+    "preview": "astro preview",
+    "check": "npm run data:generate && npm run data:validate && npm run brand:audit && astro check"
+  },
+  "dependencies": {
+    "astro": "^5.16.0",
+    "marked": "^16.0.0",
+    "sanitize-html": "^2.17.0",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

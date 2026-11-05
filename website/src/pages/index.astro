@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppCard from '../components/AppCard.astro';
+import {withBase} from '../lib/url';
+import catalog from '../data/catalog.json';
+import type {CatalogApp, CatalogCategory} from '../lib/types';
+const apps = catalog.apps as CatalogApp[];
+const categories = catalog.categories as CatalogCategory[];
+const featured = [...apps].sort((a,b)=>Number(b.featured)-Number(a.featured)||b.recommendWeight-a.recommendWeight||a.name.localeCompare(b.name)).slice(0,8);
+const quickCategories=categories.filter(c=>['AI','Database','DevTool','DevOps','Tool','Storage','Media','Security'].includes(c.key));
+const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
+---
+<BaseLayout>
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <div class="hero-eyebrow"><span class="live-dot"></span> 开放的自托管应用目录</div>
+        <h1>发现好应用，<br/><em>让每台服务器更有价值。</em></h1>
+        <p>从 AI 模型到数据库，从开发工具到家庭云。探索、比较并了解下一款值得部署的开源应用。</p>
+        <form action={withBase('/apps/')} class="hero-search" method="get" role="search">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" name="q" id="hero-search" placeholder="搜索应用名称、关键词或分类..." aria-label="搜索应用"/>
+          <button type="submit">探索应用 <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="hero-tags"><span>热门探索</span><a href={withBase('/apps/?q=Ollama')}>Ollama</a><a href={withBase('/apps/?q=PostgreSQL')}>PostgreSQL</a><a href={withBase('/apps/?q=n8n')}>n8n</a></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="hero-float a"><span>▣</span><span>APP STORE</span></div>
+        <div class="hero-float b"><span>✦</span><span>OPEN SOURCE</span></div>
+        <div class="hero-float c"><span>↗</span><span>DISCOVER</span></div>
+        <div class="hero-center"><span class="brand-mark big"><span></span><span></span><span></span><span></span></span></div>
+      </div>
+    </div>
+  </section>
+  <section class="stats-strip">
+    <div class="container stats-inner">
+      <div><strong>{catalog.manifest.total}+</strong><span>开源应用</span></div>
+      <div><strong>{categories.length}</strong><span>专业分类</span></div>
+      <div><strong>100%</strong><span>静态浏览体验</span></div>
+      <span class="stats-note">探索技术信息，不涉及服务器安装操作</span>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="section-heading"><div><div class="eyebrow">BROWSE BY CATEGORY</div><h2>从你感兴趣的领域开始</h2><p>清晰分类，快速发现适合的开源服务。</p></div><a class="section-link" href={withBase('/apps/')}>全部应用 <span>↗</span></a></div>
+      <div class="category-grid">
+        {quickCategories.map((category,index)=><a class="category-tile" href={withBase('/apps/?category='+category.key)}>
+          <span class:list={['category-symbol','symbol-'+index]}>{['✦','▤','⌘','◇','⚙','◫','♫','◈'][index]}</span>
+          <span class="category-content"><strong>{category.label}</strong><small>{count(category.key)} 款应用</small></span>
+          <span class="category-arrow">↗</span>
+        </a>)}
+      </div>
+    </div>
+  </section>
+  <section class="section section-muted">
+    <div class="container">
+      <div class="section-heading"><div><div class="eyebrow">EDITOR'S PICKS</div><h2>精选应用</h2><p>从活跃的开源项目中，发现值得尝试的工具。</p></div><a class="section-link" href={withBase('/apps/')}>探索全部 <span>↗</span></a></div>
+      <div class="app-grid">{featured.map(app=><AppCard app={app} categories={categories}/>)}</div>
+      <div class="explore-more"><a class="button-outline" href={withBase('/apps/')}>浏览全部 {apps.length} 款应用 <span>→</span></a></div>
+    </div>
+  </section>
+  <section class="container ending-banner">
+    <div><div class="eyebrow">BUILT FOR OPEN SOURCE</div><h2>好工具，值得被更多人发现。</h2><p>基于开源目录自动生成，持续同步应用信息，让探索始终简单。</p></div>
+    <a href={withBase('/about/')} class="button-light">了解 Cockpit Apps <span>↗</span></a>
+  </section>
+</BaseLayout>

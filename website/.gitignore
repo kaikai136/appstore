@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.source/
+src/data/catalog.json
+src/data/details/
+public/data/
+public/icons/
+.DS_Store
+.env

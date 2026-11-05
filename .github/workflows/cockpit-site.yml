@@ -1,0 +1,77 @@
+name: Cockpit App Store Website
+
+on:
+  push:
+    branches: [dev, main]
+    paths:
+      - "apps/**"
+      - "data.yaml"
+      - "website/**"
+      - "package.json"
+      - ".github/workflows/cockpit-site.yml"
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - "apps/**"
+      - "data.yaml"
+      - "website/**"
+      - "package.json"
+      - ".github/workflows/cockpit-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cockpit-website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Validate and build static site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install website dependencies
+        run: npm run setup
+      - name: Typecheck, catalog validation and brand audit
+        run: npm run check
+      - name: Build from repository apps/
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://example.com' }}
+          SITE_BASE: ${{ vars.SITE_BASE || '/' }}
+        run: npm run build
+      - name: Upload static site for Nginx / CDN
+        uses: actions/upload-artifact@v4
+        with:
+          name: cockpit-appstore-dist
+          path: website/dist/
+          if-no-files-found: error
+      - name: Package GitHub Pages artifact
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' && vars.COCKPIT_DEPLOY_PAGES == 'true' && vars.SITE_URL != '' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist/
+
+  deploy:
+    name: Deploy website to GitHub Pages
+    needs: build
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' && vars.COCKPIT_DEPLOY_PAGES == 'true' && vars.SITE_URL != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
