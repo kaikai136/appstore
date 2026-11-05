@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AppCard from '../components/AppCard.astro';
 import {withBase} from '../lib/url';
+import fs from 'node:fs';
+import path from 'node:path';
 import catalog from '../data/catalog.json';
 import type {CatalogApp, CatalogCategory} from '../lib/types';
 const apps = catalog.apps as CatalogApp[];
@@ -9,36 +11,48 @@ const categories = catalog.categories as CatalogCategory[];
 const featured = [...apps].sort((a,b)=>Number(b.featured)-Number(a.featured)||b.recommendWeight-a.recommendWeight||a.name.localeCompare(b.name)).slice(0,8);
 const quickCategories=categories.filter(c=>['AI','Database','DevTool','DevOps','Tool','Storage','Media','Security'].includes(c.key));
 const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
+const detailsDir=path.join(process.cwd(),'src/data/details');
+const details=apps.map(app=>JSON.parse(fs.readFileSync(path.join(detailsDir,app.key+'.json'),'utf8')) as {versionsDetailed?:Array<{templateAvailable:boolean}>});
+const versionCount=apps.reduce((sum,app)=>sum+app.versions.length,0);
+const composeVersions=details.reduce((sum,detail)=>sum+(detail.versionsDetailed||[]).filter(v=>v.templateAvailable).length,0);
+const composeApps=details.filter(detail=>(detail.versionsDetailed||[]).some(v=>v.templateAvailable)).length;
+const gpuApps=apps.filter(app=>app.gpuSupport).length;
+const architectureCounts=['amd64','arm64','arm/v7'].map(arch=>({arch,count:apps.filter(app=>app.architectures.includes(arch)).length}));
+const categoryStats=categories.map(category=>({category,count:count(category.key)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count).slice(0,8);
+const maxCategoryCount=categoryStats[0]?.count||1;
 ---
 <BaseLayout>
-  <section class="hero">
-    <div class="container hero-inner">
-      <div class="hero-copy">
-        <div class="hero-eyebrow"><span class="live-dot"></span> 开放的自托管应用目录</div>
-        <h1>发现好应用，<br/><em>让每台服务器更有价值。</em></h1>
-        <p>从 AI 模型到数据库，从开发工具到家庭云。探索、比较并了解下一款值得部署的开源应用。</p>
-        <form action={withBase('/apps/')} class="hero-search" method="get" role="search">
-          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <input type="search" name="q" id="hero-search" placeholder="搜索应用名称、关键词或分类..." aria-label="搜索应用"/>
-          <button type="submit">探索应用 <span aria-hidden="true">→</span></button>
-        </form>
-        <div class="hero-tags"><span>热门探索</span><a href={withBase('/apps/?q=Ollama')}>Ollama</a><a href={withBase('/apps/?q=PostgreSQL')}>PostgreSQL</a><a href={withBase('/apps/?q=n8n')}>n8n</a></div>
+  <section class="directory-overview">
+    <div class="container overview-inner">
+      <header class="overview-heading">
+        <div><div class="eyebrow">CATALOG OVERVIEW</div><h1>应用目录数据概览</h1><p>按分类、容器模板与运行架构了解当前收录情况。</p></div>
+        <a class="button-outline" href={withBase('/apps/')}>浏览应用 <span>↗</span></a>
+      </header>
+      <div class="overview-metrics" aria-label="目录统计">
+        <div class="overview-metric"><span>收录应用</span><strong>{apps.length}</strong><small>个开源项目</small></div>
+        <div class="overview-metric"><span>应用分类</span><strong>{categories.length}</strong><small>个领域</small></div>
+        <div class="overview-metric"><span>版本配置</span><strong>{versionCount}</strong><small>个版本条目</small></div>
+        <div class="overview-metric metric-container"><span>含 Compose 模板</span><strong>{composeApps}</strong><small>覆盖 {composeVersions} 个版本模板</small></div>
+        <div class="overview-metric"><span>GPU 相关</span><strong>{gpuApps}</strong><small>个应用标记支持</small></div>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-        <div class="hero-float a"><span>▣</span><span>APP STORE</span></div>
-        <div class="hero-float b"><span>✦</span><span>OPEN SOURCE</span></div>
-        <div class="hero-float c"><span>↗</span><span>DISCOVER</span></div>
-        <div class="hero-center"><span class="brand-mark big"><span></span><span></span><span></span><span></span></span></div>
+      <div class="overview-panels">
+        <section class="overview-panel category-stats">
+          <div class="overview-panel-head"><div><h2>分类分布</h2><p>按应用关联分类计数</p></div><span>{categories.length} 类</span></div>
+          <div class="category-bars">
+            {categoryStats.map(item=><a class="category-bar-row" href={withBase('/apps/?category='+item.category.key)}>
+              <span class="category-bar-label">{item.category.label}</span><span class="category-bar-track"><span style={`width:${Math.max(4,item.count/maxCategoryCount*100)}%`}></span></span><strong>{item.count}</strong>
+            </a>)}
+          </div>
+        </section>
+        <section class="overview-panel runtime-stats">
+          <div class="overview-panel-head"><div><h2>容器与运行环境</h2><p>来自收录的应用版本模板</p></div><span class="runtime-mark">▣</span></div>
+          <div class="runtime-highlight"><strong>{composeVersions}</strong><span>个版本提供 Compose 模板</span></div>
+          <div class="runtime-line"><span>amd64</span><div><i style={`width:${apps.length?architectureCounts[0].count/apps.length*100:0}%`}></i></div><strong>{architectureCounts[0].count}</strong></div>
+          <div class="runtime-line"><span>arm64</span><div><i style={`width:${apps.length?architectureCounts[1].count/apps.length*100:0}%`}></i></div><strong>{architectureCounts[1].count}</strong></div>
+          <div class="runtime-line"><span>arm/v7</span><div><i style={`width:${apps.length?architectureCounts[2].count/apps.length*100:0}%`}></i></div><strong>{architectureCounts[2].count}</strong></div>
+          <p class="runtime-note">模板仅供参考，原始部署依赖可能需要适配。</p>
+        </section>
       </div>
-    </div>
-  </section>
-  <section class="stats-strip">
-    <div class="container stats-inner">
-      <div><strong>{catalog.manifest.total}+</strong><span>开源应用</span></div>
-      <div><strong>{categories.length}</strong><span>专业分类</span></div>
-      <div><strong>100%</strong><span>静态浏览体验</span></div>
-      <span class="stats-note">探索技术信息，不涉及服务器安装操作</span>
     </div>
   </section>
   <section class="section">
