@@ -28,6 +28,12 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
       <div class="empty-results" id="empty-results" hidden><strong>没有找到符合条件的应用</strong><p>试试调整关键词或者清空筛选条件。</p></div>
     </div>
   </div>
+  <dialog class="app-modal" id="app-modal" aria-labelledby="app-modal-title">
+    <div class="app-modal-shell">
+      <div class="app-modal-bar"><span id="app-modal-title">应用详情</span><button id="app-modal-close" type="button" aria-label="关闭详情">×</button></div>
+      <div class="app-modal-body" id="app-modal-body"><div class="modal-loading">正在加载详情...</div></div>
+    </div>
+  </dialog>
 </BaseLayout>
 <script>
   const form = {
@@ -40,6 +46,10 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
     empty: document.querySelector<HTMLElement>('#empty-results')!,
   };
   const cards = Array.from(form.grid.querySelectorAll<HTMLElement>('[data-app-card]'));
+  const modal = document.querySelector<HTMLDialogElement>('#app-modal')!;
+  const modalBody = document.querySelector<HTMLElement>('#app-modal-body')!;
+  const modalTitle = document.querySelector<HTMLElement>('#app-modal-title')!;
+  const closeModal = () => modal.close();
   const categories = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter-category]'));
   let activeCategory='all';
   const params=new URLSearchParams(window.location.search);
@@ -76,6 +86,29 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
     history.replaceState(null,'',url.pathname+url.search);
   }
   categories.forEach(b=>b.addEventListener('click',()=>{activeCategory=b.dataset.filterCategory||'all';update()}));
+  cards.forEach(card=>card.addEventListener('click', async event=>{
+    event.preventDefault();
+    const link=card.getAttribute('href');
+    if(!link) return;
+    modalTitle.textContent=card.querySelector('h3')?.textContent || '应用详情';
+    modalBody.innerHTML='<div class="modal-loading">正在加载详情...</div>';
+    modal.showModal();
+    try {
+      const response=await fetch(link);
+      if(!response.ok) throw new Error('request failed');
+      const html=await response.text();
+      const parsed=new DOMParser().parseFromString(html,'text/html');
+      const detail=parsed.querySelector('.detail-page');
+      if(!detail) throw new Error('detail missing');
+      modalBody.replaceChildren(detail);
+      modalBody.querySelectorAll('a').forEach(a=>a.setAttribute('target','_blank'));
+    } catch {
+      modalBody.innerHTML='<div class="modal-error">详情加载失败，请打开应用详情页查看。</div>';
+    }
+  }));
+  document.querySelector('#app-modal-close')?.addEventListener('click',closeModal);
+  modal.addEventListener('click',event=>{if(event.target===modal) closeModal()});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape' && modal.open) closeModal()});
   [form.input,form.arch,form.gpu,form.sort].forEach(el=>el.addEventListener('input',update));
   document.querySelector('#reset-filters')?.addEventListener('click',()=>{
     activeCategory='all';form.input.value='';form.arch.value='all';form.gpu.value='all';form.sort.value='name';update();
