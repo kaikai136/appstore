@@ -8,9 +8,6 @@ const categories=catalog.categories as CatalogCategory[];
 const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
 ---
 <BaseLayout title="全部应用" description="按分类、GPU 支持和架构浏览 Cockpit App Store 的开源应用目录。">
-  <section class="list-intro">
-    <div class="container"><div class="eyebrow">APPLICATION DIRECTORY</div><h1>探索全部应用</h1><p>从 {catalog.manifest.total} 款应用中，找到适合你的下一款开源工具。</p></div>
-  </section>
   <div class="container catalog-layout">
     <aside class="filter-sidebar" aria-label="应用分类">
       <div class="filter-sidebar-head">应用分类 <span>{categories.length}</span></div>
