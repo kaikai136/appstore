@@ -217,6 +217,9 @@ img{max-width:100%}
 .version-select{height:43px;min-width:200px;max-width:100%;margin-bottom:18px}
 .version-summary{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:18px;font-size:13px}
 .version-panel h3{font-size:14px}
+.compose-download{color:var(--brand-deep);background:#eef1ff;border:1px solid #dce3ff;padding:6px 10px;font-weight:600}
+.compose-download:hover{background:#e1e7ff}
+.compose-download:focus-visible{outline:3px solid #9eabec;outline-offset:3px}
 .fields-table{border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .fields-row{display:grid;grid-template-columns:1.1fr 1fr 80px;gap:12px;padding:12px 14px;font-size:11px;border-top:1px solid var(--line);align-items:center;overflow-wrap:anywhere}
 .fields-header{background:#f7f9fc;font-weight:700;border-top:0}

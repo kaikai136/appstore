@@ -101,7 +101,11 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
       const detail=parsed.querySelector('.detail-page');
       if(!detail) throw new Error('detail missing');
       modalBody.replaceChildren(detail);
-      modalBody.querySelectorAll('a').forEach(a=>a.setAttribute('target','_blank'));
+      const selector=modalBody.querySelector<HTMLSelectElement>('#version-select');
+      selector?.addEventListener('change',()=>{
+        modalBody.querySelectorAll<HTMLElement>('[data-version]').forEach(panel=>{panel.hidden=panel.dataset.version!==selector.value;});
+      });
+      modalBody.querySelectorAll('a:not([download])').forEach(a=>{a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');});
     } catch {
       modalBody.innerHTML='<div class="modal-error">详情加载失败，请打开应用详情页查看。</div>';
     }

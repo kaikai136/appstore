@@ -14,7 +14,7 @@ const {app}=Astro.props;
 const details=JSON.parse(fs.readFileSync(path.join(process.cwd(),'src/data/details',app.key+'.json'),'utf8')) as {
   readmeZh:string;
   readmeEn:string;
-  versionsDetailed: Array<{id:string;fields:Array<{key:string;label:string;type:string;required:boolean;sensitive:boolean}>;templateAvailable:boolean;needsSourcePlatform:boolean;gpuTemplate:boolean;}>;
+  versionsDetailed: Array<{id:string;fields:Array<{key:string;label:string;type:string;required:boolean;sensitive:boolean}>;templateAvailable:boolean;templateUrl?:string;needsSourcePlatform:boolean;gpuTemplate:boolean;}>;
 };
 const cats=catalog.categories as CatalogCategory[];
 const categoryName=(key:string)=>cats.find(c=>c.key===key)?.label||key;
@@ -47,7 +47,7 @@ const related=(catalog.apps as CatalogApp[]).filter(other=>other.key!==app.key &
             <label class="version-select-label" for="version-select">查看应用包版本</label>
             <select id="version-select" class="version-select">{details.versionsDetailed.map(v=><option value={v.id}>{v.id}</option>)}</select>
             {details.versionsDetailed.map((v,i)=><div class="version-panel" data-version={v.id} hidden={i!==0}>
-              <div class="version-summary"><span>版本 <strong>{v.id}</strong></span>{v.gpuTemplate && <span class="tag">GPU 相关模板</span>}<span class="tag">{v.templateAvailable?'包含 Compose 模板':'未检测到 Compose'}</span></div>
+              <div class="version-summary"><span>版本 <strong>{v.id}</strong></span>{v.gpuTemplate && <span class="tag">GPU 相关模板</span>}{v.templateUrl ? <a class="tag compose-download" href={withBase(v.templateUrl)} download="docker-compose.yaml">↓ 下载 docker-compose.yaml</a> : <span class="tag">未检测到 Compose</span>}</div>
               <h3>配置字段</h3>
               {v.fields.length > 0 ? <div class="fields-table"><div class="fields-row fields-header"><span>参数</span><span>说明</span><span>属性</span></div>{v.fields.map(field=><div class="fields-row"><code>{field.key}</code><span>{field.label||field.key}</span><span>{field.sensitive?'敏感信息':(field.required?'必填':'可选')}</span></div>)}</div> : <p class="muted">此版本未声明可配置的表单字段。</p>}
               {v.needsSourcePlatform && <p class="compat-warning">原始模板存在特定平台的网络或环境变量依赖，不能直接作为 Cockpit 安装文件使用。</p>}

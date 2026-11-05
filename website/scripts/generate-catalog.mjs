@@ -77,10 +77,17 @@ function readDetails(dir, key) {
       const data = fs.existsSync(config) ? readYaml(config) : {};
       const fields = valueFields(metadata(data).formFields);
       const composeText = fs.existsSync(compose) ? fs.readFileSync(compose,'utf8') : '';
+      const templateUrl = composeText ? `/data/compose/${encodeURIComponent(key)}/${encodeURIComponent(item.name)}/docker-compose.yaml` : '';
+      if (composeText) {
+        const outputDir = path.join(publicData, 'compose', key, item.name);
+        fs.mkdirSync(outputDir, { recursive: true });
+        fs.copyFileSync(compose, path.join(outputDir, 'docker-compose.yaml'));
+      }
       versions.push({
         id: item.name,
         fields,
         templateAvailable: !!composeText,
+        templateUrl,
         needsSourcePlatform: /PANEL_|1panel-network|1panel:/i.test(composeText),
         gpuTemplate: /runtime:\s*nvidia|capabilities:\s*\[\s*gpu\s*\]/i.test(composeText)
       });
