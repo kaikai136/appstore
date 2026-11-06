@@ -13,6 +13,7 @@ const canonical=new URL(Astro.url.pathname, Astro.site || 'https://example.com')
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="theme-color" content="#f7f9fc"/>
+    <script is:inline>try{const t=localStorage.getItem('cockpit-theme');if(t==='dark')document.documentElement.dataset.theme='dark'}catch{}</script>
     <meta name="description" content={description}/>
     <meta property="og:type" content="website"/>
     <meta property="og:site_name" content={brand.name}/>
