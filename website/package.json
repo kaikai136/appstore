@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "astro": "^5.16.0",
-    "marked": "^16.0.0",
+    "marked": "^16.4.2",
     "sanitize-html": "^2.17.0",
-    "yaml": "^2.8.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
