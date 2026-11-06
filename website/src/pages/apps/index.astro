@@ -21,7 +21,7 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
         <label class="select-wrap"><span>GPU</span><select id="filter-gpu" aria-label="GPU 支持筛选"><option value="all">不限</option><option value="yes">支持</option></select></label>
         <label class="select-wrap"><span>排序</span><select id="sort-apps" aria-label="排序方式"><option value="name">名称</option><option value="featured">推荐</option></select></label>
       </div>
-      <div class="result-head"><p role="status" aria-live="polite"><strong id="result-count">{apps.length}</strong> 款应用</p><button id="reset-filters" type="button">清空筛选</button></div>
+      <div class="result-head"><div class="catalog-result-title"><h1 id="catalog-category-title">全部应用</h1><p role="status" aria-live="polite"><strong id="result-count">{apps.length}</strong> 款应用</p></div><button id="reset-filters" type="button">↺ 重置筛选</button></div>
       <div class="app-grid catalog-grid" id="catalog-grid">
         {apps.map(app=><AppCard app={app} categories={categories}/>)}
       </div>
@@ -74,6 +74,7 @@ const count=(key:string)=>apps.filter(a=>a.categories.includes(key)).length;
       cards.slice().sort((a,b)=>score(b)-score(a)||(a.dataset.key||'').localeCompare(b.dataset.key||'')).forEach(el=>form.grid.appendChild(el));
     } else cards.slice().sort((a,b)=>(a.dataset.key||'').localeCompare(b.dataset.key||'')).forEach(el=>form.grid.appendChild(el));
     form.count.textContent=String(shown);
+    document.querySelector('#catalog-category-title')!.textContent=categories.find(btn=>btn.dataset.filterCategory===activeCategory)?.querySelector('span')?.textContent||'全部应用';
     form.empty.hidden=shown>0;
     categories.forEach(btn=>{
       const active=btn.dataset.filterCategory===activeCategory;

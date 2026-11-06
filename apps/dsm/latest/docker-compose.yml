@@ -1,0 +1,31 @@
+services:
+  dsm:
+    image: kroese/virtual-dsm:latest
+    container_name: ${CONTAINER_NAME}
+    devices:
+      - "/dev/kvm:/dev/kvm"
+    networks:
+      - dsm-network
+    ports:
+      - "${PANEL_APP_PORT_HTTP}:5000"
+      # - "5000:5000"
+      # - "123:123"
+      # - "137-139:137-139"
+      # - "445:445"
+      # - "3702:3702"
+      # - "5357:5357"
+      # - "161:161"
+      # - "3260-3262:3260-3262"
+      # - "20000-20050:20000-20050"
+    environment:
+      DISK_SIZE: "500G"
+      CPU_CORES: "4"
+      RAM_SIZE: "8192M"
+    volumes:
+      - ./dsm:/storage
+    cap_add:
+      - NET_ADMIN
+    stop_grace_period: 60s
+networks:  
+  dsm-network:  
+    external: true

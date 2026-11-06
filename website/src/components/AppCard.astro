@@ -12,7 +12,7 @@ const nameOf=(key: string) => categories.find(c=>c.key===key)?.label || key;
     <div class="app-icon">
       {app.icon ? <img src={withBase(app.icon)} width="54" height="54" alt="" loading="lazy"/> : <span class="icon-fallback">{app.name.slice(0,1).toUpperCase()}</span>}
     </div>
-    <span class="card-chevron" aria-hidden="true">↗</span>
+    <div class="card-indicators">{app.gpuSupport && <span class="card-gpu">GPU</span>}<span class="card-chevron" aria-hidden="true">↗</span></div>
   </div>
   <div class="card-main">
     <h3>{app.name}</h3>
