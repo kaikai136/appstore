@@ -41,6 +41,8 @@ npm run preview          # 预览 website/dist/
 
 构建产物位于 `website/dist/`，可以直接由 Nginx、CDN 或 GitHub Pages 托管；运行时不需要 Node.js 服务或数据库。
 
+构建产物同时发布只读第三方源：`/source.json` 是源描述，`/source/index.json` 是应用索引，`/source/apps/<key>.json` 是应用及版本清单。Compose 文件附有 SHA-256 校验值，但当前均标记为未经平台适配验证、不可直接安装。协议和消费流程见 [第三方源协议](docs/THIRD_PARTY_SOURCE.md)。
+
 ## 应用数据维护
 
 `apps/<key>/` 存放一个应用的基础元数据 `data.yml`、图标、README 和不同版本的配置模板。新增或修改这些文件后，CI 会重新生成静态索引和详情页，无须手动维护前端应用列表。

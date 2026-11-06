@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-const base = new URL('../src',import.meta.url);
-const root = path.resolve(base.pathname);
+import { fileURLToPath } from 'node:url';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src');
 const offenders=[];
 function scan(dir) {
   for(const entry of fs.readdirSync(dir,{withFileTypes:true})) {

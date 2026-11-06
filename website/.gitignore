@@ -5,6 +5,8 @@ dist/
 src/data/catalog.json
 src/data/details/
 public/data/
+public/source/
+public/source.json
 public/icons/
 .DS_Store
 .env

@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "npm run data:generate && astro dev --host 0.0.0.0",
     "data:generate": "node scripts/generate-catalog.mjs",
-    "data:validate": "node scripts/validate-catalog.mjs",
+    "data:validate": "node scripts/validate-catalog.mjs && node scripts/validate-source.mjs",
     "brand:audit": "node scripts/audit-brand.mjs",
-    "build": "npm run data:generate && npm run data:validate && npm run brand:audit && astro build && node scripts/verify-output.mjs",
+    "build": "npm run data:generate && npm run data:validate && npm run brand:audit && astro build && node scripts/validate-source.mjs dist && node scripts/verify-output.mjs",
     "preview": "astro preview",
     "check": "npm run data:generate && npm run data:validate && npm run brand:audit && astro check"
   },

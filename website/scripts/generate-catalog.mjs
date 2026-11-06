@@ -13,6 +13,7 @@ const sourceApps = path.join(sourceDir, 'apps');
 const generated = path.join(projectDir, 'src/data');
 const iconsDir = path.join(projectDir, 'public/icons');
 const publicData = path.join(projectDir, 'public/data');
+const publicSource = path.join(projectDir, 'public/source');
 const detailsDir = path.join(generated, 'details');
 const warnings = [];
 const seenKeys = new Set();
@@ -97,7 +98,10 @@ function readDetails(dir, key) {
   return versions;
 }
 function prepareOutput() {
-  for (const dir of [generated, detailsDir, iconsDir, publicData]) fs.mkdirSync(dir,{recursive:true});
+  for (const dir of [generated, detailsDir, iconsDir, publicData, publicSource]) fs.mkdirSync(dir,{recursive:true});
+  fs.rmSync(publicSource, {recursive:true, force:true});
+  fs.mkdirSync(path.join(publicSource,'apps'),{recursive:true});
+  fs.rmSync(path.join(publicData,'compose'), {recursive:true, force:true});
 }
 function main() {
   if (!fs.existsSync(sourceApps)) throw Error(`Cannot find source apps directory: ${sourceApps}. Set APPSTORE_SOURCE.`);
@@ -183,6 +187,31 @@ function main() {
   fs.writeFileSync(path.join(publicData,'apps.json'),JSON.stringify({manifest,categories,apps}));
   fs.writeFileSync(path.join(publicData,'manifest.json'),JSON.stringify(manifest));
   fs.writeFileSync(path.join(publicData,'warnings.json'),JSON.stringify(warnings));
+  const sourceConfig=JSON.parse(fs.readFileSync(path.join(projectDir,'src/config/source.json'),'utf8'));
+  const sourceInfo={schemaVersion:1,...sourceConfig,index:'source/index.json',generatedAt:manifest.generatedAt,revision:sha,appCount:apps.length};
+  const sourceCatalogApps=apps.map(app=>{
+    const details=JSON.parse(fs.readFileSync(path.join(detailsDir,app.key+'.json'),'utf8'));
+    const appManifestPath=path.join(publicSource,'apps',app.key+'.json');
+    const versionEntries=(details.versionsDetailed||[]).map(version=>{
+      const template=path.join(publicData,'compose',app.key,version.id,'docker-compose.yaml');
+      const compose=fs.existsSync(template)?{
+        filename:'docker-compose.yaml',
+        url:`../../data/compose/${encodeURIComponent(app.key)}/${encodeURIComponent(version.id)}/docker-compose.yaml`,
+        sha256:crypto.createHash('sha256').update(fs.readFileSync(template)).digest('hex'),
+        compatibility:'unverified',
+        installable:false
+      }:null;
+      return {version:version.id,architectures:app.architectures,fields:version.fields,compose};
+    });
+    const appManifest={schemaVersion:1,sourceId:sourceInfo.sourceId,id:`${sourceInfo.sourceId}/${app.key}`,key:app.key,name:app.name,summary:app.summary,categories:app.categories,icon:app.icon?`../../icons/${app.key}.png`:null,website:app.website||null,repository:app.repository||null,documentation:app.documentation||null,type:app.type||null,gpuSupport:app.gpuSupport,versions:versionEntries};
+    fs.writeFileSync(appManifestPath,JSON.stringify(appManifest,null,2)+'\n');
+    const preferredVersion=config.preferredVersions?.[app.key];
+    if(preferredVersion && !app.versions.includes(preferredVersion)) throw Error(`Unknown preferred version: ${app.key}@${preferredVersion}`);
+    return {id:appManifest.id,key:app.key,name:app.name,summary:app.summary,categories:app.categories,icon:app.icon?`../icons/${app.key}.png`:null,manifest:`apps/${app.key}.json`,latestVersion:preferredVersion||null,gpuSupport:app.gpuSupport,architectures:app.architectures};
+  });
+  const sourceIndex={schemaVersion:1,sourceId:sourceInfo.sourceId,revision:sha,generatedAt:manifest.generatedAt,appCount:sourceCatalogApps.length,categories,catalog:sourceCatalogApps};
+  fs.writeFileSync(path.join(projectDir,'public/source.json'),JSON.stringify(sourceInfo,null,2)+'\n');
+  fs.writeFileSync(path.join(publicSource,'index.json'),JSON.stringify(sourceIndex,null,2)+'\n');
   const searchHash=crypto.createHash('sha256').update(JSON.stringify(result)).digest('hex').slice(0,12);
   console.log(`catalog: ${apps.length} apps, ${categories.length} categories, ${rejected} rejected, ${warnings.length} warnings, hash ${searchHash}`);
   warnings.slice(0,20).forEach(w=>console.warn('WARN',w));

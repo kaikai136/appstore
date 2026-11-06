@@ -34,6 +34,8 @@ website/src/data/details/*          website/public/icons/*
 
 The browser downloads static assets. Directory search/filter/sort is entirely client-side; the site has no runtime search API or database.
 
+The build also publishes a versioned read-only source protocol at `website/dist/source.json` and `website/dist/source/`. App manifests reference static Compose artifacts and include SHA-256 digests. These files support external catalog clients; they do not provide install APIs or certify platform compatibility. See [THIRD_PARTY_SOURCE.md](THIRD_PARTY_SOURCE.md).
+
 ## Project policy
 
 1. Keep upstream `apps/**` directory structure and deploy templates unchanged until a separate, validated Cockpit adapter exists. `PANEL_*` variables and `1panel-network` are original package dependencies, not Cockpit support.

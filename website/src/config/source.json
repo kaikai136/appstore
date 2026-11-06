@@ -1,0 +1,9 @@
+{
+  "sourceId": "kaikai136.appstore",
+  "name": "Cockpit App Store Community Source",
+  "description": "Community-maintained index of open-source self-hosted applications and reference deployment templates.",
+  "maintainer": "kaikai136",
+  "homepage": "https://github.com/kaikai136/appstore",
+  "repository": "https://github.com/kaikai136/appstore",
+  "license": "GPL-3.0"
+}
